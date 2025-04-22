@@ -73,12 +73,11 @@ class HabitTracker:
         with open(filename, 'w') as file:
             json.dump(data, file)
 
-    def load_from_json(self):
+    def load_from_json(self, filename='habits.json'):
         """
         Loads habit tracker data from a JSON file and initializes the tracker state.
         """
-
-        data = self.load_data('habits.json')
+        data = self.load_data(filename)
         if data:
             self.total_xp = data['total_xp']
             self.rewards = data['rewards']
@@ -87,30 +86,16 @@ class HabitTracker:
             self.coins = data['coins']
             self.exp_needed = data['exp_needed']
             self.habits = [
-                Habit(
-                    habit_data['name'],
-                    habit_data['habit_type'],
-                    habit_data['streak'],
-                    datetime.strptime(habit_data['last_completed'], '%Y-%m-%d') if habit_data[
-                        'last_completed'] else None
-                )
+                Habit.from_dict(habit_data)
                 for habit_data in data['habits']
             ]
 
-    def save_to_json(self):
+    def save_to_json(self, filename='habits.json'):
         """
         Saves the current state of the habit tracker to a JSON file.
         """
         data_to_save = {
-            'habits': [
-                {
-                    'name': habit.name,
-                    'habit_type': habit.habit_type,
-                    'streak': habit.streak,
-                    'last_completed': habit.last_completed.strftime('%Y-%m-%d') if habit.last_completed else None
-                }
-                for habit in self.habits
-            ],
+            'habits': [habit.to_dict() for habit in self.habits],
             'total_xp': self.total_xp,
             'rewards': self.rewards,
             'level': self.level,
@@ -118,7 +103,7 @@ class HabitTracker:
             'coins': self.coins,
             'exp_needed': self.exp_needed
         }
-        self.save_data(data_to_save, 'habits.json')
+        self.save_data(data_to_save, filename)
 
     def add_habit(self, name, habit_type):
         """
@@ -453,3 +438,15 @@ class HabitTracker:
                 break
             else:
                 print("Invalid option, please try again.")
+
+    def get_all_habits(self):
+        """
+        Returns a list of all Habit objects currently tracked.
+        """
+        return self.habits
+
+    def get_level_and_exp(self):
+        """
+        Returns the current level, current XP, and XP needed for the next level.
+        """
+        return self.level, self.total_xp, self.exp_needed
